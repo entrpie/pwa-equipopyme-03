@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
         ),
         tooltipTheme: TooltipThemeData(
           decoration: BoxDecoration(
-            color: const Color(0xFF556B2F).withOpacity(0.8),
+            color: const Color(0xFF556B2F).withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(8.0),
           ),
           textStyle: const TextStyle(
