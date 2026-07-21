@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart'; // Solución para la fuente Mon
 import 'firebase_options.dart';
 import 'inventario.dart'; // Redirección al iniciar sesión
 import 'reportes.dart';
+import 'home_page.dart'; // Página principal para web
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,7 +49,7 @@ class MyApp extends StatelessWidget {
           triggerMode: TooltipTriggerMode.tap,
         ),
       ),
-      home: kIsWeb ? const ReportesPage() : const LoginPage(),
+      home: const LoginPage(),
     );
   }
 }
@@ -96,10 +97,13 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
 
-      // Redirecciona al Inventario eliminando el Login de la pila
+      // Redirecciona a HomePage (web) o Inventario (móvil) eliminando el Login de la pila
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const InventarioPage()),
+        MaterialPageRoute(
+          builder: (context) =>
+              kIsWeb ? const HomePage() : const InventarioPage(),
+        ),
       );
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
