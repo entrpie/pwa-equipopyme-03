@@ -16,6 +16,16 @@ For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
 
+<<<<<<< HEAD
+Errores en usuarios.dart
+
+The declaration '_buildUsuariosSection' isnt referenced. dart(unused_element)
+Try removing the declaration of '_buildUsuariosSection'. (aparece como Warming)
+'activeColor' is deprecated and shouldn't be used. Use activeThumbColor or activeTrackColor instead.
+Try replacing the use of deprecated member with replacement
+The parameter name 'sum' matches a visible type name
+Try adding a name for the parameter or changing the parameter name to not math an existing type.
+=======
 ## ⚠️ Problemas Conocidos y Advertencias (Known Issues)
 
 En esta sección se listan las advertencias y logs detectados en la consola del navegador (**Chrome DevTools**) durante la ejecución en entorno de desarrollo.
@@ -43,3 +53,4 @@ DDC is about to load 1/2 scripts with pool size = 1000
 DDC is about to load 657/657 scripts with pool size = 1000
 This app is linked to the debug service: ws://127.0.0.1:51681/...
 Starting application from main method in: org-dartlang-app:/web_entrypoint.dart.
+>>>>>>> origin/main
