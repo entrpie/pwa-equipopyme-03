@@ -1,11 +1,13 @@
 // main.dart
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart'; // Solución para la fuente Montserrat
 import 'firebase_options.dart';
 import 'inventario.dart'; // Redirección al iniciar sesión
+import 'reportes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,7 +48,7 @@ class MyApp extends StatelessWidget {
           triggerMode: TooltipTriggerMode.tap,
         ),
       ),
-      home: const LoginPage(),
+      home: kIsWeb ? const ReportesPage() : const LoginPage(),
     );
   }
 }
