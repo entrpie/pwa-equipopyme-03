@@ -55,4 +55,4 @@ Gravedad: Media (Defecto de UI / UX)
   )
 
   Consecuencia:
-En dispositivos móviles con pantallas estrechas (ancho inferior a ~380px), el contenido de las tarjetas (textos, números e íconos) no dispondrá de suficiente espacio horizontal, provocando el error visual de franjas amarillas y negras.
+  En dispositivos móviles con pantallas estrechas (ancho inferior a ~380px), el contenido de las tarjetas (textos, números e íconos) no dispondrá de suficiente espacio horizontal, provocando el error visual de franjas amarillas y negras.
