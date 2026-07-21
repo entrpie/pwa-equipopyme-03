@@ -1,56 +1,58 @@
-# mi_app
+=== ERRORES ===
 
-A new Flutter project.
+Archivo: reportes.dart
+Módulo: Pantalla de reportes y rendimiento del negocio.
 
-## Getting Started
+-Casting inseguro en lectura de Firestore
 
-This project is a starting point for a Flutter application.
+  Ubicación: _buildKpiCardsRow() $\rightarrow$ `StreamBuilder<QuerySnapshot>
 
-A few resources to get you started if this is your first Flutter project:
+  Gravedad: Alta (Crash en tiempo de ejecución)
+ 
+  Al realizar la suma/filtrado de productos con stock bajo, el código asume implícitamente que la propiedad doc.data() no es nula, que la clave "stock" siempre existe en el documento y que viene con un tipo de dato estricto.
+  
+  Código Afectado:
+    dart
+  stockBajoCount = snapshot.data!.docs.where((doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return (data['stock'] ?? 0) < 5;
+  }).length;
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+  Consecuencia:
+  Si algún documento en la colección productos no contiene el campo stock definido, si el documento está nulo durante una lectura parcial, o si el tipo registrado no es compatible directamenete con la conversión explícita, la aplicación arrojará un error no controlado: TypeError: null is not a subtype of type Map<String, dynamic>.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+-Incompatibilidad de API por Versión de SDK
 
-<<<<<<< HEAD
-Errores en usuarios.dart
+  Ubicación: _buildGraficaVentasCard() y _buildMovimientosCard()
 
-The declaration '_buildUsuariosSection' isnt referenced. dart(unused_element)
-Try removing the declaration of '_buildUsuariosSection'. (aparece como Warming)
-'activeColor' is deprecated and shouldn't be used. Use activeThumbColor or activeTrackColor instead.
-Try replacing the use of deprecated member with replacement
-The parameter name 'sum' matches a visible type name
-Try adding a name for the parameter or changing the parameter name to not math an existing type.
-=======
-## ⚠️ Problemas Conocidos y Advertencias (Known Issues)
+  Gravedad: Media-Alta (Error de compilación en versiones estables previas)
 
-En esta sección se listan las advertencias y logs detectados en la consola del navegador (**Chrome DevTools**) durante la ejecución en entorno de desarrollo.
+  Se utiliza el método de color withValues(alpha: ...) para aplicar transparencias.
 
-### 📌 Advertencias de DevTools (Tab "Issues")
+  Código afectado: color: _Colors.brandLight.withValues(alpha: 0.15)
 
-* **Formularios y Accesibilidad (`A form field element should have an id or name attribute`)** [x2]
-  * **Detalle:** Hay dos campos de entrada de texto/formulario que no tienen asignados los atributos `id` o `name`.
-  * **Impacto:** Puede afectar la autocompletación del navegador y herramientas de accesibilidad.
+  Consecuencia:
+  El método withValues fue introducido recientemente en Flutter 3.27+. Si el proyecto se compila en un entorno local, servidor de integración continua (CI/CD) o equipo de trabajo utilizando versiones previas (como Flutter 3.22 o 3.24), la compilación fallará al no reconocer dicho método.
 
-* **Características Obsoletas (`Deprecated feature used`)** [x1]
-  * **Detalle:** Se está utilizando alguna propiedad, función o API web que ha sido marcada como obsoleta en las especificaciones recientes de HTML/JS.
+-Riesgo de Desbordamiento de Pantalla en Móviles
 
-* **Historial de Navegación (`Session History Item Has Been Marked Skippable`)** [x1]
-  * **Detalle:** Notificación del navegador referente al comportamiento del historial de sesión al navegar entre páginas.
+  Ubicación: _buildKpiCardsRow()
 
----
+Gravedad: Media (Defecto de UI / UX)
 
-### 🔍 Logs de Depuración en Consola (Flutter Web - DDC)
+  Las tres tarjetas de métricas principales (Ingresos Totales, Pedidos Completados, Alertas de Stock) se encuentran contenidas dentro de una sola fila Row utilizando Expanded en cada elemento sin adaptación responsiva.
 
-Los siguientes mensajes en la consola corresponden al proceso habitual de compilación e inicialización de **Dart Development Compiler (DDC)** en modo `debug`:
+  Código afectado:
 
-```text
-DDC is about to load 1/2 scripts with pool size = 1000
-DDC is about to load 657/657 scripts with pool size = 1000
-This app is linked to the debug service: ws://127.0.0.1:51681/...
-Starting application from main method in: org-dartlang-app:/web_entrypoint.dart.
->>>>>>> origin/main
+  Row(
+  children: [
+    Expanded(child: _KpiReportCard(...)),
+    SizedBox(width: 16),
+    Expanded(child: _KpiReportCard(...)),
+    SizedBox(width: 16),
+    Expanded(child: _KpiReportCard(...)),
+   ],
+  )
+
+  Consecuencia:
+  En dispositivos móviles con pantallas estrechas (ancho inferior a ~380px), el contenido de las tarjetas (textos, números e íconos) no dispondrá de suficiente espacio horizontal, provocando el error visual de franjas amarillas y negras.
