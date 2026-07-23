@@ -101487,12 +101487,12 @@ k=t.p
 return A.bW(r,A.cP(A.b([l,B.eC,A.cL(A.d5(A.b([m,B.ch,A.bA(s.e,r,r,r,A.dA(r,r,n?B.aV:o,r,r,r,r,r,r,r,r,20,r,r,B.a1,r,r,!0,r,r,r,r,r,r,r,r),r,r)],k),B.a_,B.v,B.y),1)],k),B.O,B.v,B.y,0),B.n,r,r,new A.bC(B.j,r,p,q,r,r,B.K),r,r,r,r,B.cO,r,r,r)}}
 A.zS.prototype={
 aiK(a){var s=B.c.eA(a.toLowerCase())
-if(B.c.q(s,"cherry"))return"../assets/img/vela_cherry.jpg"
-else if(B.c.q(s,"cocacola"))return"../assets/img/vela_cocacola.jpg"
-else if(B.c.q(s,"eucalyptus")||B.c.q(s,"spearmint"))return"../assets/img/vela_eucalyptus.jpg"
-else if(B.c.q(s,"lim\xf3n")||B.c.q(s,"limon"))return"../assets/img/vela_limon.jpg"
-else if(B.c.q(s,"vainilla"))return"../assets/img/wax_vainilla.jpg"
-return"../assets/img/vela_login.jpg"},
+if(B.c.q(s,"cherry"))return"assets/img/vela_cherry.jpg"
+else if(B.c.q(s,"cocacola"))return"assets/img/vela_cocacola.jpg"
+else if(B.c.q(s,"eucalyptus")||B.c.q(s,"spearmint"))return"assets/img/vela_eucalyptus.jpg"
+else if(B.c.q(s,"lim\xf3n")||B.c.q(s,"limon"))return"assets/img/vela_limon.jpg"
+else if(B.c.q(s,"vainilla"))return"assets/img/wax_vainilla.jpg"
+return"assets/img/vela_login.jpg"},
 K(a){var s,r,q,p=this,o=null,n=B.MZ[B.h.bF(p.w,4)],m=p.f,l=m<5,k=p.c,j=p.aiK(k),i=A.bh(16),h=A.hm(B.aH),g=t.p,f=A.b([],g),e=p.r
 if(e!=null&&e.length!==0)f.push(A.al2(0,A.aOY(e,new A.aAY(p,j),B.d9)))
 else f.push(A.al2(0,A.aOW(j,new A.aAZ(p),B.d9)))
