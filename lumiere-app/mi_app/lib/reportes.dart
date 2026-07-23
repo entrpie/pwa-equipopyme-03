@@ -5,7 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 // =================== PALETA DE COLORES (COHERENTE CON INVENTARIO) ===================
 class _Colors {
   static const bg = Color(0xFFFAF8F5);
-  static const card = Colors.white;
   static const border = Color(0xFFECE6DF);
   static const brand = Color(0xFF8C6239);
   static const brandLight = Color(0xFFE2B28B);
