@@ -1,14 +1,11 @@
 // main.dart
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart'; // Solución para la fuente Montserrat
-import 'firebase_options.dart';
-import 'inventario.dart'; // Redirección al iniciar sesión
-import 'reportes.dart';
-import 'home_page.dart'; // Página principal para web
+import 'package:mi_app/firebase_options.dart';
+import 'package:mi_app/inventario.dart'; // Redirección al iniciar sesión
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,7 +32,7 @@ class MyApp extends StatelessWidget {
         ),
         tooltipTheme: TooltipThemeData(
           decoration: BoxDecoration(
-            color: const Color(0xFF556B2F).withOpacity(0.8),
+            color: const Color(0xFF556B2F).withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(8.0),
           ),
           textStyle: const TextStyle(
@@ -97,13 +94,10 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
 
-      // Redirecciona a HomePage (web) o Inventario (móvil) eliminando el Login de la pila
+      // Redirecciona al Inventario (que contiene su propia navegación) eliminando el Login de la pila
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) =>
-              kIsWeb ? const HomePage() : const InventarioPage(),
-        ),
+        MaterialPageRoute(builder: (context) => const InventarioPage()),
       );
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;

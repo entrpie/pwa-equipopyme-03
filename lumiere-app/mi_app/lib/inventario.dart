@@ -5,9 +5,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'main.dart';
-import 'reportes.dart';
-import 'usuarios.dart';
+import 'package:mi_app/main.dart';
+import 'package:mi_app/usuarios.dart';
+import 'package:mi_app/reportes.dart';
 
 // ==================== PALETA DE COLORES ====================
 class _Colors {
@@ -1542,11 +1542,6 @@ class _InventarioPageState extends State<InventarioPage> {
         ],
       ),
     );
-  }
-
-  // Vista vacía temporal de fallback para usuarios si no hay widget externo mapeado
-  Widget _buildUsuariosSection() {
-    return const Center(child: Text('Usuarios Page Fallback'));
   }
 }
 
