@@ -82,7 +82,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
 
-      // Redirecciona al Inventario eliminando el Login de la pila
+      // Redirecciona al Inventario (que contiene su propia navegación) eliminando el Login de la pila
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const InventarioPage()),

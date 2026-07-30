@@ -6,9 +6,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'main.dart';
-import 'reportes.dart';
-import 'usuarios.dart';
+import 'package:mi_app/main.dart';
+import 'package:mi_app/usuarios.dart';
+import 'package:mi_app/reportes.dart';
 
 // ==================== PALETA DE COLORES ====================
 class _Colors {
@@ -106,7 +106,7 @@ class _InventarioPageState extends State<InventarioPage> {
   }
 
   Future<void> _pickImageFromDesktop() async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.image,
       withData: true,
     );
@@ -970,7 +970,7 @@ class _InventarioPageState extends State<InventarioPage> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             Future<void> pickReplacementImage() async {
-              final result = await FilePicker.platform.pickFiles(
+              final result = await FilePicker.pickFiles(
                 type: FileType.image,
                 withData: true,
               );
@@ -1544,11 +1544,6 @@ class _InventarioPageState extends State<InventarioPage> {
       ),
     );
   }
-
-  // Vista vacía temporal de fallback para usuarios si no hay widget externo mapeado
-  Widget _buildUsuariosSection() {
-    return const Center(child: Text('Usuarios Page Fallback'));
-  }
 }
 
 // ==================== WIDGETS DE SOPORTE COMPARTIDOS ====================
@@ -1643,21 +1638,21 @@ class _ProductCard extends StatelessWidget {
     final nombreNormalizado = nombre.toLowerCase().trim();
 
     if (nombreNormalizado.contains('cherry')) {
-      return '../assets/img/vela_cherry.jpg';
+      return 'assets/img/vela_cherry.jpg';
     } else if (nombreNormalizado.contains('cocacola')) {
-      return '../assets/img/vela_cocacola.jpg';
+      return 'assets/img/vela_cocacola.jpg';
     } else if (nombreNormalizado.contains('eucalyptus') ||
         nombreNormalizado.contains('spearmint')) {
-      return '../assets/img/vela_eucalyptus.jpg';
+      return 'assets/img/vela_eucalyptus.jpg';
     } else if (nombreNormalizado.contains('limón') ||
         nombreNormalizado.contains('limon')) {
-      return '../assets/img/vela_limon.jpg';
+      return 'assets/img/vela_limon.jpg';
     } else if (nombreNormalizado.contains('vainilla')) {
-      return '../assets/img/wax_vainilla.jpg';
+      return 'assets/img/wax_vainilla.jpg';
     }
 
     // Imagen por defecto si no coincide con ninguna
-    return '../assets/img/vela_login.jpg';
+    return 'assets/img/vela_login.jpg';
   }
 
   @override
