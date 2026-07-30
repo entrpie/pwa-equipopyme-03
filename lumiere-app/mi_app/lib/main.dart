@@ -1,13 +1,14 @@
 // main.dart
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_fonts/google_fonts.dart'; // Solución para la fuente Montserrat
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'firebase_options.dart';
-import 'inventario.dart'; // Redirección al iniciar sesión
-import 'reportes.dart';
+import 'inventario.dart'; 
+import 'usuarios.dart' hide InventarioPage; // Evita el conflicto de clases duplicadas
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,30 +26,15 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        // Aplicamos Montserrat de forma global y automática
         fontFamily: GoogleFonts.montserrat().fontFamily,
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF8C6239),
           primary: const Color(0xFF8C6239),
           surface: const Color(0xFFFAF8F5),
         ),
-        tooltipTheme: TooltipThemeData(
-          decoration: BoxDecoration(
-            color: const Color(0xFF556B2F).withValues(alpha: 0.8),
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          textStyle: const TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          waitDuration: const Duration(milliseconds: 300),
-          showDuration: const Duration(seconds: 3),
-          triggerMode: TooltipTriggerMode.tap,
-        ),
       ),
-      home: kIsWeb ? const ReportesPage() : const LoginPage(),
+      // SIN 'const' dentro del ternario:
+      home: const LoginPage(),
     );
   }
 }
