@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:mi_app/main.dart';
 import 'package:mi_app/usuarios.dart';
+import 'package:mi_app/ventas.dart';
 import 'package:mi_app/reportes.dart';
 
 // ==================== PALETA DE COLORES ====================
@@ -37,7 +38,7 @@ class _Colors {
 }
 
 // Secciones disponibles en el sidebar
-enum _NavSection { catalogo, usuarios, reportes }
+enum _NavSection { catalogo, usuarios, ventas, reportes }
 
 // Filtro de disponibilidad usado en el panel de filtros
 enum _StockFilter { todos, disponible, bajo }
@@ -264,6 +265,8 @@ class _InventarioPageState extends State<InventarioPage> {
         return 'Catálogo';
       case _NavSection.usuarios:
         return 'Usuarios';
+      case _NavSection.ventas:
+        return 'Ventas';
       case _NavSection.reportes:
         return 'Reportes';
     }
@@ -275,6 +278,8 @@ class _InventarioPageState extends State<InventarioPage> {
         return 'Todos los productos de la tienda';
       case _NavSection.usuarios:
         return 'Gestiona tus usuarios y permisos';
+      case _NavSection.ventas:
+        return 'Registra y consulta tus ventas';
       case _NavSection.reportes:
         return 'Estadísticas generales del inventario';
     }
@@ -292,6 +297,8 @@ class _InventarioPageState extends State<InventarioPage> {
           _NavSection.catalogo => _buildCatalogoSection(),
           _NavSection.usuarios =>
             const UsuariosPage(), // <--- Apunta a tu clase externa de usuarios.dart
+          _NavSection.ventas =>
+            const VentasPage(), // <--- Apunta a tu clase externa de ventas.dart
           _NavSection.reportes =>
             const ReportesPage(), // <--- Apunta a tu clase externa de reportes.dart
         },
@@ -383,6 +390,16 @@ class _InventarioPageState extends State<InventarioPage> {
               selected: _section == _NavSection.usuarios,
               onTap: () {
                 setState(() => _section = _NavSection.usuarios);
+                Navigator.pop(context);
+              },
+            ),
+            _NavTile(
+              icon: Icons.point_of_sale_rounded,
+              label: 'Ventas',
+              subtitle: 'Registra tus ventas',
+              selected: _section == _NavSection.ventas,
+              onTap: () {
+                setState(() => _section = _NavSection.ventas);
                 Navigator.pop(context);
               },
             ),
