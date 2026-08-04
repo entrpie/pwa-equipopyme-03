@@ -1,5 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:mi_app/firebase_options.dart';
 
 // ==================== PALETA DE COLORES (COHERENTE CON INVENTARIO) ====================
 class _Colors {
@@ -14,6 +17,36 @@ class _Colors {
   static const danger = Color(0xFFC97A7A);
 }
 
+// ==================== ROLES Y PERMISOS ====================
+// Consulta el rol del usuario autenticado actual en Firestore. Se busca
+// primero por UID (usuarios creados desde esta versión de la app) y, si no
+// existe, por email (usuarios de prueba creados antes de vincular Auth).
+class RolService {
+  static Future<String?> obtenerRolActual() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return null;
+
+    final porUid = await FirebaseFirestore.instance
+        .collection('usuarios')
+        .doc(user.uid)
+        .get();
+    if (porUid.exists) {
+      return porUid.data()?['rol'] as String?;
+    }
+
+    if (user.email == null) return null;
+    final porEmail = await FirebaseFirestore.instance
+        .collection('usuarios')
+        .where('email', isEqualTo: user.email)
+        .limit(1)
+        .get();
+    if (porEmail.docs.isNotEmpty) {
+      return porEmail.docs.first.data()['rol'] as String?;
+    }
+    return null;
+  }
+}
+
 class UsuariosPage extends StatefulWidget {
   const UsuariosPage({super.key});
 
@@ -26,12 +59,14 @@ class _UsuariosPageState extends State<UsuariosPage> {
   final _searchController = TextEditingController();
   final _nombreController = TextEditingController();
   final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   String _searchQuery = '';
   bool _showAddPanel = false;
   bool _isSaving = false;
   bool _activo = true;
   String _rolSeleccionado = 'Administrador';
+  String? _rolActual;
 
   final List<String> _roles = [
     'Administrador',
@@ -41,12 +76,23 @@ class _UsuariosPageState extends State<UsuariosPage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    RolService.obtenerRolActual().then((rol) {
+      if (mounted) setState(() => _rolActual = rol);
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     _nombreController.dispose();
     _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
+
+  bool get _esAdministrador => _rolActual == 'Administrador';
 
   List<QueryDocumentSnapshot> _filtrarUsuarios(
     List<QueryDocumentSnapshot> docs,
@@ -70,7 +116,32 @@ class _UsuariosPageState extends State<UsuariosPage> {
     setState(() => _isSaving = true);
 
     try {
-      await FirebaseFirestore.instance.collection('usuarios').add({
+      // Se crea la cuenta en una instancia SECUNDARIA de Firebase App.
+      // createUserWithEmailAndPassword inicia sesión automáticamente con la
+      // cuenta recién creada en la instancia donde se ejecuta; al correrlo en
+      // una app secundaria evitamos cerrar la sesión del administrador que
+      // está creando el usuario.
+      FirebaseApp appSecundaria;
+      try {
+        appSecundaria = Firebase.app('UsuarioSecundario');
+      } catch (_) {
+        appSecundaria = await Firebase.initializeApp(
+          name: 'UsuarioSecundario',
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+      }
+      final authSecundaria = FirebaseAuth.instanceFor(app: appSecundaria);
+
+      final credencial = await authSecundaria.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+      final uid = credencial.user!.uid;
+      await authSecundaria.signOut();
+
+      // El ID del documento coincide con el UID de Auth para poder validar
+      // permisos por rol directamente en las reglas de Firestore.
+      await FirebaseFirestore.instance.collection('usuarios').doc(uid).set({
         'nombre': _nombreController.text.trim(),
         'email': _emailController.text.trim(),
         'rol': _rolSeleccionado,
@@ -82,6 +153,7 @@ class _UsuariosPageState extends State<UsuariosPage> {
 
       _nombreController.clear();
       _emailController.clear();
+      _passwordController.clear();
       setState(() {
         _rolSeleccionado = 'Administrador';
         _activo = true;
@@ -90,8 +162,28 @@ class _UsuariosPageState extends State<UsuariosPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Usuario agregado correctamente'),
+          content: const Text('Usuario y acceso creados correctamente'),
           backgroundColor: _Colors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      String mensaje = 'No se pudo crear el acceso del usuario';
+      if (e.code == 'email-already-in-use') {
+        mensaje = 'Ese correo ya tiene una cuenta registrada';
+      } else if (e.code == 'weak-password') {
+        mensaje = 'La contraseña debe tener al menos 6 caracteres';
+      } else if (e.code == 'invalid-email') {
+        mensaje = 'El correo no es válido';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(mensaje),
+          backgroundColor: _Colors.danger,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -114,6 +206,39 @@ class _UsuariosPageState extends State<UsuariosPage> {
       if (mounted) {
         setState(() => _isSaving = false);
       }
+    }
+  }
+
+  // Elimina el registro del usuario en Firestore (revoca su acceso dentro de
+  // la app). Borrar también la cuenta de Firebase Auth requeriría el Admin
+  // SDK desde un backend (p. ej. Cloud Functions), fuera del alcance actual
+  // de una app 100% cliente.
+  Future<void> _eliminarUsuario(String id) async {
+    try {
+      await FirebaseFirestore.instance.collection('usuarios').doc(id).delete();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Usuario eliminado'),
+          backgroundColor: _Colors.brand,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('No se pudo eliminar el usuario'),
+          backgroundColor: _Colors.danger,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
     }
   }
 
@@ -187,46 +312,49 @@ class _UsuariosPageState extends State<UsuariosPage> {
                 ),
               ),
             ),
-            const SizedBox(width: 12),
-            ElevatedButton.icon(
-              onPressed: () => setState(() => _showAddPanel = !_showAddPanel),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _showAddPanel
-                    ? _Colors.textDark
-                    : _Colors.brand,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+            if (_esAdministrador) ...[
+              const SizedBox(width: 12),
+              ElevatedButton.icon(
+                onPressed: () =>
+                    setState(() => _showAddPanel = !_showAddPanel),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _showAddPanel
+                      ? _Colors.textDark
+                      : _Colors.brand,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                icon: Icon(
+                  _showAddPanel
+                      ? Icons.close_rounded
+                      : Icons.person_add_alt_rounded,
+                  size: 18,
+                ),
+                label: Text(
+                  _showAddPanel ? 'Cerrar formulario' : 'Agregar Usuario',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-              icon: Icon(
-                _showAddPanel
-                    ? Icons.close_rounded
-                    : Icons.person_add_alt_rounded,
-                size: 18,
-              ),
-              label: Text(
-                _showAddPanel ? 'Cerrar formulario' : 'Agregar Usuario',
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
+            ],
           ],
         ),
         const SizedBox(height: 20),
         Expanded(
           child: docs.isEmpty
-              ? const Center(child: Text('AÃºn no hay usuarios registrados.'))
+              ? const Center(child: Text('Aún no hay usuarios registrados.'))
               : filtrados.isEmpty
               ? const Center(
-                  child: Text('No hay usuarios que coincidan con la bÃºsqueda.'),
+                  child: Text('No hay usuarios que coincidan con la búsqueda.'),
                 )
               : ListView.separated(
                   itemCount: filtrados.length,
@@ -318,6 +446,17 @@ class _UsuariosPageState extends State<UsuariosPage> {
                               ),
                             ),
                           ),
+                          if (_esAdministrador) ...[
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.delete_outline_rounded,
+                                color: _Colors.danger,
+                              ),
+                              tooltip: 'Eliminar usuario',
+                              onPressed: () => _eliminarUsuario(doc.id),
+                            ),
+                          ],
                         ],
                       ),
                     );
@@ -360,7 +499,7 @@ class _UsuariosPageState extends State<UsuariosPage> {
               TextFormField(
                 controller: _nombreController,
                 decoration: InputDecoration(
-                  hintText: 'Ej. Sofia LÃ³pez',
+                  hintText: 'Ej. Sofia López',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -368,12 +507,12 @@ class _UsuariosPageState extends State<UsuariosPage> {
                   fillColor: _Colors.bg,
                 ),
                 validator: (value) => (value == null || value.trim().isEmpty)
-                    ? 'Ingresa un nombre vÃ¡lido'
+                    ? 'Ingresa un nombre válido'
                     : null,
               ),
               const SizedBox(height: 18),
               const Text(
-                'Correo electrÃ³nico',
+                'Correo electrónico',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
               ),
               const SizedBox(height: 8),
@@ -397,8 +536,34 @@ class _UsuariosPageState extends State<UsuariosPage> {
                   );
                   return emailRegex.hasMatch(value.trim())
                       ? null
-                      : 'Correo invÃ¡lido';
+                      : 'Correo inválido';
                 },
+              ),
+              const SizedBox(height: 18),
+              const Text(
+                'Contraseña de acceso',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  hintText: 'Mínimo 6 caracteres',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: _Colors.bg,
+                ),
+                validator: (value) => (value == null || value.length < 6)
+                    ? 'Debe tener al menos 6 caracteres'
+                    : null,
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'El usuario podrá iniciar sesión de inmediato con este correo y contraseña.',
+                style: TextStyle(fontSize: 11, color: _Colors.textGray),
               ),
               const SizedBox(height: 18),
               const Text(
@@ -530,7 +695,7 @@ class _UsuariosPageState extends State<UsuariosPage> {
                   child: AnimatedSize(
                     duration: const Duration(milliseconds: 280),
                     curve: Curves.easeInOut,
-                    child: _showAddPanel
+                    child: _showAddPanel && _esAdministrador
                         ? SizedBox(width: 380, child: _buildAddUserForm())
                         : const SizedBox(width: 0),
                   ),

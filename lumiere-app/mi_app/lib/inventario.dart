@@ -82,6 +82,10 @@ class _InventarioPageState extends State<InventarioPage> {
   String _categoriaSeleccionada = 'Velas de Molde';
   bool _isSaving = false;
 
+  // Rol del usuario autenticado (ver RolService en usuarios.dart). Solo un
+  // Administrador puede eliminar productos.
+  String? _rolActual;
+
   // ---- Navegación y estado de la UI ----
   _NavSection _section = _NavSection.usuarios;
   bool _showAddPanel = false;
@@ -95,6 +99,14 @@ class _InventarioPageState extends State<InventarioPage> {
     'Wax Melts',
     'Accesorios',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    RolService.obtenerRolActual().then((rol) {
+      if (mounted) setState(() => _rolActual = rol);
+    });
+  }
 
   @override
   void dispose() {
@@ -947,7 +959,9 @@ class _InventarioPageState extends State<InventarioPage> {
                             stock: stock,
                             imageUrl: imageUrl.isEmpty ? null : imageUrl,
                             colorIndex: index,
-                            onDelete: () => _eliminarProducto(doc.id),
+                            onDelete: _rolActual == 'Administrador'
+                                ? () => _eliminarProducto(doc.id)
+                                : null,
                             onEdit: () => _mostrarDialogoEdicion(doc.id, data),
                           );
                         },
@@ -1637,7 +1651,7 @@ class _ProductCard extends StatelessWidget {
   final int stock;
   final String? imageUrl;
   final int colorIndex;
-  final VoidCallback onDelete;
+  final VoidCallback? onDelete;
   final VoidCallback onEdit;
 
   const _ProductCard({
@@ -1647,7 +1661,7 @@ class _ProductCard extends StatelessWidget {
     required this.stock,
     this.imageUrl,
     required this.colorIndex,
-    required this.onDelete,
+    this.onDelete,
     required this.onEdit,
   });
 
@@ -1757,24 +1771,26 @@ class _ProductCard extends StatelessWidget {
                             padding: EdgeInsets.zero,
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Colors.white24,
-                            shape: BoxShape.circle,
-                          ),
-                          child: IconButton(
-                            icon: const Icon(
-                              Icons.delete_outline_rounded,
-                              size: 18,
-                              color: Colors.redAccent,
+                        if (onDelete != null) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.white24,
+                              shape: BoxShape.circle,
                             ),
-                            onPressed: onDelete,
-                            constraints: const BoxConstraints(),
-                            padding: EdgeInsets.zero,
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.delete_outline_rounded,
+                                size: 18,
+                                color: Colors.redAccent,
+                              ),
+                              onPressed: onDelete,
+                              constraints: const BoxConstraints(),
+                              padding: EdgeInsets.zero,
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),
