@@ -1,6 +1,5 @@
 // main.dart
 import 'dart:ui';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -34,7 +33,6 @@ class MyApp extends StatelessWidget {
           surface: const Color(0xFFFAF8F5),
         ),
       ),
-      // SIN 'const' dentro del ternario:
       home: const LoginPage(),
     );
   }
@@ -69,25 +67,72 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
+      final emailIngresado = _emailController.text.trim().toLowerCase();
+
+      // 1. Iniciar sesión en Firebase Auth
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: emailIngresado,
         password: _passwordController.text.trim(),
       );
 
+      final uid = userCredential.user?.uid;
+      if (uid == null) throw Exception('UID no válido');
+
+      // 2. Consulta a Firestore en la colección 'usuarios'
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(uid)
+          .get();
+
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Inicio de sesión exitoso'),
-          backgroundColor: Color(0xFF556B2F),
-        ),
-      );
+      String rolEncontrado = '';
 
-      // Redirecciona al Inventario (que contiene su propia navegación) eliminando el Login de la pila
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const InventarioPage()),
-      );
+      if (userDoc.exists) {
+        final data = userDoc.data() as Map<String, dynamic>?;
+        rolEncontrado = (data?['rol'] ?? data?['role'] ?? '').toString().toLowerCase();
+      } else {
+        // Consultas de respaldo en colecciones 'admin' o 'vendedor'
+        DocumentSnapshot adminCheck = await FirebaseFirestore.instance.collection('admin').doc(uid).get();
+        if (adminCheck.exists) rolEncontrado = 'admin';
+
+        DocumentSnapshot vendedorCheck = await FirebaseFirestore.instance.collection('vendedor').doc(uid).get();
+        if (vendedorCheck.exists) rolEncontrado = 'vendedor';
+      }
+
+      // 3. Verificación flexible para otorgar rol de Administrador
+      bool esAdmin = rolEncontrado.contains('admin') || 
+                      rolEncontrado.contains('supervisor') || 
+                      emailIngresado.contains('admin');
+
+      if (esAdmin) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Acceso concedido como Administrador'),
+            backgroundColor: Color(0xFF556B2F),
+          ),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const InventarioPage(esAdmin: true),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Acceso concedido como Vendedor'),
+            backgroundColor: Color(0xFF556B2F),
+          ),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const InventarioPage(esAdmin: false),
+          ),
+        );
+      }
+
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
       String message = 'Error al iniciar sesión';
@@ -100,6 +145,14 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
+          backgroundColor: const Color(0xFFC97A7A),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
           backgroundColor: const Color(0xFFC97A7A),
         ),
       );

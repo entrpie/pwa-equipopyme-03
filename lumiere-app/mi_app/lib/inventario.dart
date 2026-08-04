@@ -1,9 +1,8 @@
+// inventario.dart
 import 'dart:typed_data';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:mi_app/main.dart';
@@ -22,13 +21,11 @@ class _Colors {
   static const success = Color(0xFF556B2F);
   static const danger = Color(0xFFC97A7A);
 
-  // Paleta oscura y cálida para el sidebar (estética de tienda de velas)
   static const sidebarBg = Color(0xFF332619);
   static const sidebarSelected = Color(0xFF4A3826);
   static const sidebarText = Color(0xFFF3E9DC);
   static const sidebarTextMuted = Color(0xFFB7A48D);
 
-  // Gradientes decorativos para los placeholders de imagen, rotan por índice
   static const List<List<Color>> imageGradients = [
     [Color(0xFFF3E7DA), Color(0xFFE9D3B8)],
     [Color(0xFFE7ECD9), Color(0xFFD3E0BE)],
@@ -37,13 +34,9 @@ class _Colors {
   ];
 }
 
-// Secciones disponibles en el sidebar
 enum _NavSection { catalogo, usuarios, reportes }
-
-// Filtro de disponibilidad usado en el panel de filtros
 enum _StockFilter { todos, disponible, bajo }
 
-// Ícono representativo para cada categoría de la tienda
 IconData _iconoCategoria(String categoria) {
   switch (categoria) {
     case 'Velas de Molde':
@@ -60,7 +53,9 @@ IconData _iconoCategoria(String categoria) {
 }
 
 class InventarioPage extends StatefulWidget {
-  const InventarioPage({super.key});
+  final bool esAdmin;
+
+  const InventarioPage({super.key, this.esAdmin = false});
 
   @override
   State<InventarioPage> createState() => _InventarioPageState();
@@ -70,7 +65,6 @@ class _InventarioPageState extends State<InventarioPage> {
   final _formKey = GlobalKey<FormState>();
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // Controladores para los campos del formulario
   final _nombreController = TextEditingController();
   final _precioController = TextEditingController();
   final _stockController = TextEditingController();
@@ -82,8 +76,7 @@ class _InventarioPageState extends State<InventarioPage> {
   String _categoriaSeleccionada = 'Velas de Molde';
   bool _isSaving = false;
 
-  // ---- Navegación y estado de la UI ----
-  _NavSection _section = _NavSection.usuarios;
+  late _NavSection _section;
   bool _showAddPanel = false;
   String _searchQuery = '';
   String _filtroCategoria = 'Todas';
@@ -95,6 +88,13 @@ class _InventarioPageState extends State<InventarioPage> {
     'Wax Melts',
     'Accesorios',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Si es Admin inicia en Usuarios; si es Vendedor entra forzosamente al Catálogo
+    _section = widget.esAdmin ? _NavSection.usuarios : _NavSection.catalogo;
+  }
 
   @override
   void dispose() {
@@ -194,7 +194,6 @@ class _InventarioPageState extends State<InventarioPage> {
     }
   }
 
-  // Función para eliminar un producto
   Future<void> _eliminarProducto(String id) async {
     try {
       await FirebaseFirestore.instance.collection('productos').doc(id).delete();
@@ -224,7 +223,6 @@ class _InventarioPageState extends State<InventarioPage> {
     }
   }
 
-  // Función para cerrar sesión
   Future<void> _cerrarSesion() async {
     await FirebaseAuth.instance.signOut();
     if (!mounted) return;
@@ -291,16 +289,14 @@ class _InventarioPageState extends State<InventarioPage> {
       body: SafeArea(
         child: switch (_section) {
           _NavSection.catalogo => _buildCatalogoSection(),
-          _NavSection.usuarios =>
-            const UsuariosPage(), // <--- Apunta a tu clase externa de usuarios.dart
-          _NavSection.reportes =>
-            const ReportesPage(), // <--- Apunta a tu clase externa de reportes.dart
+          _NavSection.usuarios => const UsuariosPage(),
+          _NavSection.reportes => const ReportesPage(),
         },
       ),
     );
   }
 
-  // ==================== SIDEBAR (MENÚ HAMBURGUESA) ====================
+  // ==================== SIDEBAR CONFIGURADO SEGÚN EL ROL ====================
   Widget _buildSidebar() {
     return Drawer(
       backgroundColor: _Colors.sidebarBg,
@@ -326,11 +322,11 @@ class _InventarioPageState extends State<InventarioPage> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           'LUMIÈRE & CO.',
                           style: TextStyle(
                             color: _Colors.sidebarText,
@@ -340,8 +336,8 @@ class _InventarioPageState extends State<InventarioPage> {
                           ),
                         ),
                         Text(
-                          'Panel de Control',
-                          style: TextStyle(
+                          widget.esAdmin ? 'Panel de Administrador' : 'Panel de Vendedor',
+                          style: const TextStyle(
                             color: _Colors.sidebarTextMuted,
                             fontSize: 11,
                           ),
@@ -367,6 +363,8 @@ class _InventarioPageState extends State<InventarioPage> {
               ),
             ),
             const SizedBox(height: 8),
+
+            // Catálogo siempre visible para cualquier usuario
             _NavTile(
               icon: Icons.grid_view_rounded,
               label: 'Catálogo',
@@ -377,26 +375,31 @@ class _InventarioPageState extends State<InventarioPage> {
                 Navigator.pop(context);
               },
             ),
-            _NavTile(
-              icon: Icons.person_rounded,
-              label: 'Usuarios',
-              subtitle: 'Gestiona tus usuarios',
-              selected: _section == _NavSection.usuarios,
-              onTap: () {
-                setState(() => _section = _NavSection.usuarios);
-                Navigator.pop(context);
-              },
-            ),
-            _NavTile(
-              icon: Icons.bar_chart_rounded,
-              label: 'Reportes',
-              subtitle: 'Estadísticas e insights',
-              selected: _section == _NavSection.reportes,
-              onTap: () {
-                setState(() => _section = _NavSection.reportes);
-                Navigator.pop(context); // Cierra el sidebar
-              },
-            ),
+
+            // Opciones exclusivas para el Administrador
+            if (widget.esAdmin) ...[
+              _NavTile(
+                icon: Icons.person_rounded,
+                label: 'Usuarios',
+                subtitle: 'Gestiona tus usuarios',
+                selected: _section == _NavSection.usuarios,
+                onTap: () {
+                  setState(() => _section = _NavSection.usuarios);
+                  Navigator.pop(context);
+                },
+              ),
+              _NavTile(
+                icon: Icons.bar_chart_rounded,
+                label: 'Reportes',
+                subtitle: 'Estadísticas e insights',
+                selected: _section == _NavSection.reportes,
+                onTap: () {
+                  setState(() => _section = _NavSection.reportes);
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+
             const Spacer(),
             Divider(color: Colors.white.withValues(alpha: 0.08), height: 1),
             _NavTile(
@@ -775,14 +778,9 @@ class _InventarioPageState extends State<InventarioPage> {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1. El catálogo va al principio (Lado izquierdo)
             Expanded(child: _buildCatalogoGrid(todos, filtrados)),
-
-            // 2. Divisor decorativo intermedio
             if (_showAddPanel)
               const VerticalDivider(width: 1, color: _Colors.border),
-
-            // 3. El formulario animado va al final (Lado derecho)
             ClipRect(
               child: AnimatedSize(
                 duration: const Duration(milliseconds: 280),
@@ -1287,8 +1285,6 @@ class _InventarioPageState extends State<InventarioPage> {
                 style: TextStyle(fontSize: 12, color: _Colors.textGray),
               ),
               const SizedBox(height: 24),
-
-              // Nombre
               const Text(
                 'Nombre del Producto',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
@@ -1306,8 +1302,6 @@ class _InventarioPageState extends State<InventarioPage> {
                     v!.isEmpty ? 'Ingresa un nombre válido' : null,
               ),
               const SizedBox(height: 16),
-
-              // Precio y Stock
               Row(
                 children: [
                   Expanded(
@@ -1371,8 +1365,6 @@ class _InventarioPageState extends State<InventarioPage> {
                 ],
               ),
               const SizedBox(height: 16),
-
-              // Categoría
               const Text(
                 'Categoría',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
@@ -1448,8 +1440,6 @@ class _InventarioPageState extends State<InventarioPage> {
                   ),
                 ),
               const SizedBox(height: 28),
-
-              // Botón Guardar
               SizedBox(
                 width: double.infinity,
                 height: 48,
@@ -1485,7 +1475,6 @@ class _InventarioPageState extends State<InventarioPage> {
     );
   }
 
-  // Estado vacío del catálogo (Sin items en la DB)
   Widget _buildEmptyState() {
     return Center(
       child: Column(
@@ -1515,7 +1504,6 @@ class _InventarioPageState extends State<InventarioPage> {
     );
   }
 
-  // Estado vacío por filtros aplicados
   Widget _buildEmptyFilterState() {
     return Center(
       child: Column(
@@ -1546,7 +1534,7 @@ class _InventarioPageState extends State<InventarioPage> {
   }
 }
 
-// ==================== WIDGETS DE SOPORTE COMPARTIDOS ====================
+// ==================== WIDGETS AUXILIARES ====================
 
 class _KpiCard extends StatelessWidget {
   final IconData icon;
@@ -1651,7 +1639,6 @@ class _ProductCard extends StatelessWidget {
       return 'assets/img/wax_vainilla.jpg';
     }
 
-    // Imagen por defecto si no coincide con ninguna
     return 'assets/img/vela_login.jpg';
   }
 
@@ -1672,7 +1659,6 @@ class _ProductCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Imagen decorativa / Categoría
           Expanded(
             child: Container(
               decoration: BoxDecoration(
