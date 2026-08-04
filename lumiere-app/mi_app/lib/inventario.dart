@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:mi_app/main.dart';
 import 'package:mi_app/usuarios.dart';
+import 'package:mi_app/ventas.dart';
 import 'package:mi_app/reportes.dart';
 
 // ==================== PALETA DE COLORES ====================
@@ -34,7 +35,7 @@ class _Colors {
   ];
 }
 
-enum _NavSection { catalogo, usuarios, reportes }
+enum _NavSection { catalogo, usuarios, ventas, reportes }
 enum _StockFilter { todos, disponible, bajo }
 
 IconData _iconoCategoria(String categoria) {
@@ -263,6 +264,8 @@ class _InventarioPageState extends State<InventarioPage> {
         return 'Catálogo';
       case _NavSection.usuarios:
         return 'Usuarios';
+      case _NavSection.ventas:
+        return 'Ventas';
       case _NavSection.reportes:
         return 'Reportes';
     }
@@ -274,6 +277,8 @@ class _InventarioPageState extends State<InventarioPage> {
         return 'Todos los productos de la tienda';
       case _NavSection.usuarios:
         return 'Gestiona tus usuarios y permisos';
+      case _NavSection.ventas:
+        return 'Registra y consulta tus ventas';
       case _NavSection.reportes:
         return 'Estadísticas generales del inventario';
     }
@@ -290,6 +295,7 @@ class _InventarioPageState extends State<InventarioPage> {
         child: switch (_section) {
           _NavSection.catalogo => _buildCatalogoSection(),
           _NavSection.usuarios => const UsuariosPage(),
+          _NavSection.ventas => const VentasPage(),
           _NavSection.reportes => const ReportesPage(),
         },
       ),
@@ -372,6 +378,19 @@ class _InventarioPageState extends State<InventarioPage> {
               selected: _section == _NavSection.catalogo,
               onTap: () {
                 setState(() => _section = _NavSection.catalogo);
+                Navigator.pop(context);
+              },
+            ),
+
+            // Ventas, como Catálogo, es visible para cualquier rol: un
+            // Vendedor también necesita poder registrar ventas.
+            _NavTile(
+              icon: Icons.point_of_sale_rounded,
+              label: 'Ventas',
+              subtitle: 'Registra tus ventas',
+              selected: _section == _NavSection.ventas,
+              onTap: () {
+                setState(() => _section = _NavSection.ventas);
                 Navigator.pop(context);
               },
             ),
