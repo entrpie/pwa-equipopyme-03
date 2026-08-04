@@ -118,202 +118,233 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       body: Center(
-        child: Container(
-          constraints: const BoxConstraints(
-            maxWidth: 1000,
-            maxHeight: 620, // Altura máxima estática libre de scrollbars
-          ),
-          margin: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF8C6239).withValues(alpha: 0.06),
-                blurRadius: 30,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // === LADO IZQUIERDO: CONTENEDOR DE IMAGEN ===
-              const Expanded(
-                flex: 1,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    bottomLeft: Radius.circular(24),
-                  ),
-                  child: VelasLogIn(),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Detecta si es pantalla móvil (ancho menor a 600px)
+            final isMobile = constraints.maxWidth < 600;
+
+            return SingleChildScrollView(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: 1000,
+                  // En escritorio mantiene la altura fija; en móvil crece según el contenido
+                  maxHeight: isMobile ? double.infinity : 620,
                 ),
-              ),
-
-              // === LADO DERECHO: FORMULARIO DE INGRESO ===
-              Expanded(
-                flex: 1,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 44.0,
-                    vertical: 36.0,
-                  ),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Isotipo Minimalista
-                        Row(
-                          children: [
-                            Container(
-                              width: 10,
-                              height: 10,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFE2B28B),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'LUMIÈRE & CO.',
-                              style: TextStyle(
-                                letterSpacing: 2,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF8C6239),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-
-                        // ¡Bienvenido de vuelta! con FontWeight en negrita (bold)
-                        const Text(
-                          '¡Bienvenido de vuelta!',
-                          style: TextStyle(
-                            fontSize: 26,
-                            fontWeight:
-                                FontWeight.bold, // <-- Cambiado a negritas aquí
-                            color: Color(0xFF2D2D2D),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-
-                        const Text(
-                          'Panel de acceso exclusivo para el personal de Lumière & Co.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF8E8E8E),
-                            height: 1.4,
-                          ),
-                        ),
-                        const SizedBox(height: 28),
-
-                        // --- Campo de Correo ---
-                        _buildInputLabel('Tu correo corporativo'),
-                        const SizedBox(height: 6),
-                        TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF2D2D2D),
-                          ),
-                          decoration: _buildInputDecoration(
-                            'ejemplo@lumiere.com',
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Por favor ingresa tu correo';
-                            }
-                            if (!value.contains('@')) {
-                              return 'Ingresa un correo válido';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-
-                        // --- Campo de Contraseña ---
-                        _buildInputLabel('Tu contraseña'),
-                        const SizedBox(height: 6),
-                        TextFormField(
-                          controller: _passwordController,
-                          obscureText: _obscurePassword,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF2D2D2D),
-                          ),
-                          decoration: _buildInputDecoration('••••••••••••••••')
-                              .copyWith(
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _obscurePassword
-                                        ? Icons.visibility_off_outlined
-                                        : Icons.visibility_outlined,
-                                    color: const Color(
-                                      0xFF8C6239,
-                                    ).withValues(alpha: 0.6),
-                                    size: 18,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _obscurePassword = !_obscurePassword;
-                                    });
-                                  },
-                                ),
-                              ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Por favor ingresa tu contraseña';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 24),
-
-                        // --- Botón de "Iniciar Sesión" ---
-                        SizedBox(
-                          width: double.infinity,
-                          height: 46,
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _handleLogin,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF8C6239),
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            child: _isLoading
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Text(
-                                    'Iniciar sesión',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                          ),
-                        ),
-                      ],
+                margin: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF8C6239).withValues(alpha: 0.06),
+                      blurRadius: 30,
+                      offset: const Offset(0, 10),
                     ),
+                  ],
+                ),
+                child: isMobile
+                    ? _buildMobileLayout()
+                    : _buildDesktopLayout(),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  // === ESTRUCTURA PARA ESCRITORIO ===
+  Widget _buildDesktopLayout() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Expanded(
+          flex: 1,
+          child: ClipRRect(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              bottomLeft: Radius.circular(24),
+            ),
+            child: VelasLogIn(),
+          ),
+        ),
+        Expanded(
+          flex: 1,
+          child: _buildFormContent(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 44.0,
+              vertical: 36.0,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // === ESTRUCTURA PARA MÓVILES (Imagen arriba, formulario abajo) ===
+  Widget _buildMobileLayout() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(
+          height: 180,
+          width: double.infinity,
+          child: ClipRRect(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+            child: VelasLogIn(),
+          ),
+        ),
+        _buildFormContent(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 24.0,
+            vertical: 28.0,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // === CONTENIDO REUTILIZABLE DEL FORMULARIO ===
+  Widget _buildFormContent({required EdgeInsetsGeometry padding}) {
+    return Padding(
+      padding: padding,
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFE2B28B),
+                    shape: BoxShape.circle,
                   ),
                 ),
+                const SizedBox(width: 8),
+                const Text(
+                  'LUMIÈRE & CO.',
+                  style: TextStyle(
+                    letterSpacing: 2,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF8C6239),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              '¡Bienvenido de vuelta!',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2D2D2D),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Panel de acceso exclusivo para el personal de Lumière & Co.',
+              style: TextStyle(
+                fontSize: 12,
+                color: Color(0xFF8E8E8E),
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 24),
+            _buildInputLabel('Tu correo corporativo'),
+            const SizedBox(height: 6),
+            TextFormField(
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF2D2D2D),
+              ),
+              decoration: _buildInputDecoration('ejemplo@lumiere.com'),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Por favor ingresa tu correo';
+                }
+                if (!value.contains('@')) {
+                  return 'Ingresa un correo válido';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            _buildInputLabel('Tu contraseña'),
+            const SizedBox(height: 6),
+            TextFormField(
+              controller: _passwordController,
+              obscureText: _obscurePassword,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF2D2D2D),
+              ),
+              decoration: _buildInputDecoration('••••••••••••••••').copyWith(
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    color: const Color(0xFF8C6239).withValues(alpha: 0.6),
+                    size: 18,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
+                ),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Por favor ingresa tu contraseña';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 46,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _handleLogin,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF8C6239),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text(
+                        'Iniciar sesión',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+              ),
+            ),
+          ],
         ),
       ),
     );
