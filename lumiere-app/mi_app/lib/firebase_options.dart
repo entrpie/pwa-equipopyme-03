@@ -41,46 +41,44 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCVVVyrwHNEhtAGk-orbmxlH4dWYJ1KkX0',
-    appId: '1:1036609858488:web:71bd490356525d405dfd4d',
-    messagingSenderId: '1036609858488',
-    projectId: 'fir-login-b0a01',
-    authDomain: 'fir-login-b0a01.firebaseapp.com',
-    storageBucket: 'fir-login-b0a01.firebasestorage.app',
+    apiKey: 'AIzaSyDZdeo2tsNTJhMXINsnXtI8CC5ApfIX--o',
+    appId: '1:957390818409:web:bd9464a6f9d08dc9d6a6f8',
+    messagingSenderId: '957390818409',
+    projectId: 'lumiere-velas',
+    authDomain: 'lumiere-velas.firebaseapp.com',
+    storageBucket: 'lumiere-velas.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBtZXk1ARQOuADctLwClb4UB-h8_sQjWR4',
-    appId: '1:1036609858488:android:c15dce90f33714225dfd4d',
-    messagingSenderId: '1036609858488',
-    projectId: 'fir-login-b0a01',
-    storageBucket: 'fir-login-b0a01.firebasestorage.app',
+    apiKey: 'AIzaSyCd5Nfi-w637MeFAS1llIMzM2uM3_aZz88',
+    appId: '1:957390818409:android:27ab8740df12db45d6a6f8',
+    messagingSenderId: '957390818409',
+    projectId: 'lumiere-velas',
+    storageBucket: 'lumiere-velas.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDsFzqb7g1yt4R5msCgrFT37a6YxDFilEU',
-    appId: '1:1036609858488:ios:fce9e42411da5a295dfd4d',
-    messagingSenderId: '1036609858488',
-    projectId: 'fir-login-b0a01',
-    storageBucket: 'fir-login-b0a01.firebasestorage.app',
+    apiKey: 'AIzaSyAlWWNMx4PjieYU8y7p1TT3Sx4QO4-x8o8',
+    appId: '1:957390818409:ios:614057c3351f9560d6a6f8',
+    messagingSenderId: '957390818409',
+    projectId: 'lumiere-velas',
+    storageBucket: 'lumiere-velas.firebasestorage.app',
     iosBundleId: 'com.example.miApp',
   );
-
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyDsFzqb7g1yt4R5msCgrFT37a6YxDFilEU',
-    appId: '1:1036609858488:ios:fce9e42411da5a295dfd4d',
-    messagingSenderId: '1036609858488',
-    projectId: 'fir-login-b0a01',
-    storageBucket: 'fir-login-b0a01.firebasestorage.app',
+    apiKey: 'AIzaSyAlWWNMx4PjieYU8y7p1TT3Sx4QO4-x8o8',
+    appId: '1:957390818409:ios:614057c3351f9560d6a6f8',
+    messagingSenderId: '957390818409',
+    projectId: 'lumiere-velas',
+    storageBucket: 'lumiere-velas.firebasestorage.app',
     iosBundleId: 'com.example.miApp',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyCVVVyrwHNEhtAGk-orbmxlH4dWYJ1KkX0',
-    appId: '1:1036609858488:web:9a953d4f384bc56a5dfd4d',
-    messagingSenderId: '1036609858488',
-    projectId: 'fir-login-b0a01',
-    authDomain: 'fir-login-b0a01.firebaseapp.com',
-    storageBucket: 'fir-login-b0a01.firebasestorage.app',
+    apiKey: 'AIzaSyDZdeo2tsNTJhMXINsnXtI8CC5ApfIX--o',
+    appId: '1:957390818409:web:91b1f956c123d66cd6a6f8',
+    messagingSenderId: '957390818409',
+    projectId: 'lumiere-velas',
+    authDomain: 'lumiere-velas.firebaseapp.com',
+    storageBucket: 'lumiere-velas.firebasestorage.app',
   );
 }
