@@ -3,7 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mi_app/ventas.dart' show tiempoRelativo;
 
-// =================== PALETA DE COLORES (COHERENTE CON INVENTARIO) ===================
+// =================== PALETA DE COLORES ===================
 class _Colors {
   static const bg = Color(0xFFFAF8F5);
   static const border = Color(0xFFECE6DF);
@@ -25,60 +25,101 @@ class ReportesPage extends StatefulWidget {
 class _ReportesPageState extends State<ReportesPage> {
   String _filtroTemporal = 'Este Mes';
 
+  // Función para filtrar los documentos según la fecha seleccionada
+  List<QueryDocumentSnapshot> _filtrarVentasPorPeriodo(
+      List<QueryDocumentSnapshot> todasLasVentas) {
+    final ahora = DateTime.now();
+
+    return todasLasVentas.where((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      final ts = data['fecha'];
+      if (ts is! Timestamp) return false;
+
+      final fechaVenta = ts.toDate();
+
+      switch (_filtroTemporal) {
+        case 'Esta Semana':
+          // Calcula el inicio de la semana actual (Lunes)
+          final inicioSemana = DateTime(ahora.year, ahora.month, ahora.day)
+              .subtract(Duration(days: ahora.weekday - 1));
+          return fechaVenta.isAfter(inicioSemana) ||
+              fechaVenta.isAtSameMomentAs(inicioSemana);
+
+        case 'Este Mes':
+          // Mismo mes y año
+          return fechaVenta.year == ahora.year &&
+              fechaVenta.month == ahora.month;
+
+        case 'Este Año':
+          // Mismo año
+          return fechaVenta.year == ahora.year;
+
+        default:
+          return true;
+      }
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _Colors.bg,
-      // Una sola suscripción a la colección `ventas` alimenta los KPIs, la
-      // gráfica y el historial de esta pantalla con datos reales.
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('ventas')
             .orderBy('fecha', descending: true)
-            .limit(200)
+            .limit(300)
             .snapshots(),
         builder: (context, snapshot) {
-          final ventas = snapshot.data?.docs ?? <QueryDocumentSnapshot>[];
+          if (snapshot.hasError) {
+            return const Center(child: Text('Error al cargar datos.'));
+          }
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(color: _Colors.brand),
+            );
+          }
+
+          final todasLasVentas = snapshot.data?.docs ?? <QueryDocumentSnapshot>[];
+          final ventasFiltradas = _filtrarVentasPorPeriodo(todasLasVentas);
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(28.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Cabecera interna de Reportes
+                // Cabecera interna
                 _buildHeader(),
                 const SizedBox(height: 24),
 
                 // Fila de KPIs Principales
-                _buildKpiCardsRow(ventas),
+                _buildKpiCardsRow(ventasFiltradas),
                 const SizedBox(height: 24),
 
-                // Contenedor principal: Gráfica de Ventas + Historial de Ventas
+                // Contenedor principal: Gráfica + Historial
                 LayoutBuilder(
                   builder: (context, constraints) {
                     if (constraints.maxWidth > 950) {
-                      // Vista de Escritorio / Pantalla Ancha (Lado a Lado)
                       return Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
                             flex: 3,
-                            child: _buildGraficaVentasCard(ventas),
+                            child: _buildGraficaVentasCard(ventasFiltradas),
                           ),
                           const SizedBox(width: 24),
                           Expanded(
                             flex: 2,
-                            child: _buildMovimientosCard(ventas),
+                            child: _buildMovimientosCard(ventasFiltradas),
                           ),
                         ],
                       );
                     } else {
-                      // Vista Móvil (Uno debajo del otro)
                       return Column(
                         children: [
-                          _buildGraficaVentasCard(ventas),
+                          _buildGraficaVentasCard(ventasFiltradas),
                           const SizedBox(height: 24),
-                          _buildMovimientosCard(ventas),
+                          _buildMovimientosCard(ventasFiltradas),
                         ],
                       );
                     }
@@ -92,7 +133,7 @@ class _ReportesPageState extends State<ReportesPage> {
     );
   }
 
-  // Header con filtro temporal estético
+  // Header con selector de filtro funcional
   Widget _buildHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -140,7 +181,9 @@ class _ReportesPageState extends State<ReportesPage> {
                 );
               }).toList(),
               onChanged: (v) {
-                setState(() => _filtroTemporal = v!);
+                if (v != null) {
+                  setState(() => _filtroTemporal = v);
+                }
               },
             ),
           ),
@@ -149,8 +192,7 @@ class _ReportesPageState extends State<ReportesPage> {
     );
   }
 
-  // Tarjetas KPI (Ingresos, Ventas, Stock Crítico) calculadas a partir de la
-  // colección `ventas` real (ver StreamBuilder en build()).
+  // Tarjetas KPI calculadas con las ventas filtradas
   Widget _buildKpiCardsRow(List<QueryDocumentSnapshot> ventas) {
     final totalIngresos = ventas.fold<double>(
       0,
@@ -165,8 +207,8 @@ class _ReportesPageState extends State<ReportesPage> {
             title: 'Ingresos Totales',
             value: '\$${totalIngresos.toStringAsFixed(2)}',
             trend: ventas.isEmpty
-                ? 'Aún sin ventas'
-                : '${ventas.length} venta(s) registradas',
+                ? 'Sin ventas en este periodo'
+                : '${ventas.length} venta(s) en $_filtroTemporal',
             trendIsPositive: true,
             icon: Icons.payments_outlined,
             accentColor: _Colors.success,
@@ -177,7 +219,7 @@ class _ReportesPageState extends State<ReportesPage> {
           child: _KpiReportCard(
             title: 'Pedidos Completados',
             value: '${ventas.length}',
-            trend: 'Histórico registrado',
+            trend: 'Filtrado por: $_filtroTemporal',
             trendIsPositive: true,
             icon: Icons.shopping_bag_outlined,
             accentColor: _Colors.brand,
@@ -214,8 +256,7 @@ class _ReportesPageState extends State<ReportesPage> {
     );
   }
 
-  // Gráfico de Ventas: agrega los totales reales de la colección `ventas`
-  // por día para los últimos 7 días (hoy incluido).
+  // Gráfica de Ventas
   Widget _buildGraficaVentasCard(List<QueryDocumentSnapshot> ventas) {
     final hoy = DateTime.now();
     final dias = List.generate(
@@ -258,13 +299,13 @@ class _ReportesPageState extends State<ReportesPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Historial de Ventas (\$)',
                     style: TextStyle(
                       fontSize: 16,
@@ -272,10 +313,10 @@ class _ReportesPageState extends State<ReportesPage> {
                       color: _Colors.textDark,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
-                    'Ingresos reales de los últimos 7 días',
-                    style: TextStyle(fontSize: 11, color: _Colors.textGray),
+                    'Ingresos registrados ($_filtroTemporal)',
+                    style: const TextStyle(fontSize: 11, color: _Colors.textGray),
                   ),
                 ],
               ),
@@ -288,7 +329,6 @@ class _ReportesPageState extends State<ReportesPage> {
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-
                   getDrawingHorizontalLine: (value) =>
                       const FlLine(color: _Colors.border, strokeWidth: 1),
                 ),
@@ -369,8 +409,7 @@ class _ReportesPageState extends State<ReportesPage> {
     );
   }
 
-  // Historial de ventas reales, tomado de la misma colección `ventas` que
-  // alimenta los KPIs y la gráfica de esta pantalla.
+  // Lista de Movimientos/Ventas filtrada
   Widget _buildMovimientosCard(List<QueryDocumentSnapshot> ventas) {
     final recientes = ventas.take(10).toList();
 
@@ -394,14 +433,19 @@ class _ReportesPageState extends State<ReportesPage> {
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
-            'Últimas ventas registradas en el sistema',
-            style: TextStyle(fontSize: 11, color: _Colors.textGray),
+          Text(
+            'Mostrando ventas de: $_filtroTemporal',
+            style: const TextStyle(fontSize: 11, color: _Colors.textGray),
           ),
           const SizedBox(height: 20),
           Expanded(
             child: recientes.isEmpty
-                ? const Center(child: Text('Aún no hay ventas registradas.'))
+                ? const Center(
+                    child: Text(
+                      'Sin ventas en el periodo seleccionado.',
+                      style: TextStyle(color: _Colors.textGray, fontSize: 13),
+                    ),
+                  )
                 : ListView.separated(
                     itemCount: recientes.length,
                     separatorBuilder: (context, index) =>
@@ -465,7 +509,7 @@ class _ReportesPageState extends State<ReportesPage> {
   }
 }
 
-// Componente para las tarjetas superiores KPI de Reportes
+// Componente Tarjeta KPI
 class _KpiReportCard extends StatelessWidget {
   final String title;
   final String value;
@@ -527,12 +571,16 @@ class _KpiReportCard extends StatelessWidget {
                 color: accentColor,
               ),
               const SizedBox(width: 4),
-              Text(
-                trend,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: accentColor,
+              Expanded(
+                child: Text(
+                  trend,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: accentColor,
+                  ),
                 ),
               ),
             ],
