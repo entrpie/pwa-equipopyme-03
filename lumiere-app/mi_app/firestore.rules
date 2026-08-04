@@ -9,12 +9,18 @@ service cloud.firestore {
 
     // El rol se busca en el documento de `usuarios` cuyo ID es el UID del
     // usuario autenticado (así se crean los usuarios nuevos desde la app,
-    // ver usuarios.dart). Usuarios de prueba antiguos sin ese vínculo no
-    // podrán pasar esta validación y quedan limitados a solo lectura.
+    // ver usuarios.dart). La comparación es flexible (campo `rol` o `role`,
+    // contiene "admin") para calzar con la detección de rol en el login
+    // (main.dart). Usuarios de prueba antiguos sin ese vínculo no podrán
+    // pasar esta validación y quedan limitados a solo lectura.
     function esAdministrador() {
+      let doc = get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data;
       return autenticado() &&
         exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol == 'Administrador';
+        (
+          doc.get('rol', '').lower().matches('.*admin.*') ||
+          doc.get('role', '').lower().matches('.*admin.*')
+        );
     }
 
     match /productos/{productoId} {
