@@ -204,6 +204,42 @@ class _UsuariosPageState extends State<UsuariosPage> {
     }
   }
 
+  Future<void> _confirmarEliminacion(String id, String nombre) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text('Confirmar eliminación'),
+          content: Text('¿Estás seguro que quieres eliminar este usuario? ($nombre)'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('No', style: TextStyle(color: _Colors.textGray)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _Colors.danger,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Sí'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmar == true) {
+      _eliminarUsuario(id);
+    }
+  }
+
   Widget _buildListaUsuarios(
     List<QueryDocumentSnapshot> docs,
     List<QueryDocumentSnapshot> filtrados,
@@ -412,7 +448,7 @@ class _UsuariosPageState extends State<UsuariosPage> {
                               color: _Colors.danger,
                             ),
                             tooltip: 'Eliminar usuario',
-                            onPressed: () => _eliminarUsuario(doc.id),
+                            onPressed: () => _confirmarEliminacion(doc.id, nombre),
                           ),
                         ],
                       ),
