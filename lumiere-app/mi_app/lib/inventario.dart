@@ -803,8 +803,9 @@ class _InventarioPageState extends State<InventarioPage> {
   ) {
     final totalUnidades = todos.fold<int>(
       0,
-      (sum, d) =>
-          sum + ((d.data() as Map<String, dynamic>)['stock'] ?? 0) as int,
+      (acumulado, d) =>
+          acumulado +
+          ((d.data() as Map<String, dynamic>)['stock'] ?? 0) as int,
     );
     final stockBajo = todos.where((d) {
       final data = d.data() as Map<String, dynamic>;
@@ -1014,7 +1015,7 @@ class _InventarioPageState extends State<InventarioPage> {
                       'imageUrl': finalImageUrl ?? '',
                     });
 
-                if (!mounted) return;
+                if (!context.mounted) return;
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -1027,7 +1028,7 @@ class _InventarioPageState extends State<InventarioPage> {
                   ),
                 );
               } catch (_) {
-                if (!mounted) return;
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: const Text('No se pudo actualizar el producto'),

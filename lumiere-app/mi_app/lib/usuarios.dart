@@ -457,7 +457,7 @@ class _UsuariosPageState extends State<UsuariosPage> {
                     Switch.adaptive(
                       value: _activo,
                       onChanged: (value) => setState(() => _activo = value),
-                      activeColor: _Colors.brand,
+                      activeThumbColor: _Colors.brand,
                     ),
                   ],
                 ),
