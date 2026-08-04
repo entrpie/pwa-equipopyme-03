@@ -7,8 +7,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'firebase_options.dart';
-import 'inventario.dart'; 
-import 'usuarios.dart' hide InventarioPage; // Evita el conflicto de clases duplicadas
+import 'inventario.dart';
+import 'usuarios.dart'
+    hide InventarioPage; // Evita el conflicto de clases duplicadas
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -142,9 +143,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ],
                 ),
-                child: isMobile
-                    ? _buildMobileLayout()
-                    : _buildDesktopLayout(),
+                child: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
               ),
             );
           },
@@ -198,10 +197,7 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
         _buildFormContent(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 24.0,
-            vertical: 28.0,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 28.0),
         ),
       ],
     );
@@ -263,10 +259,7 @@ class _LoginPageState extends State<LoginPage> {
             TextFormField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
-              style: const TextStyle(
-                fontSize: 13,
-                color: Color(0xFF2D2D2D),
-              ),
+              style: const TextStyle(fontSize: 13, color: Color(0xFF2D2D2D)),
               decoration: _buildInputDecoration('ejemplo@lumiere.com'),
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -284,10 +277,7 @@ class _LoginPageState extends State<LoginPage> {
             TextFormField(
               controller: _passwordController,
               obscureText: _obscurePassword,
-              style: const TextStyle(
-                fontSize: 13,
-                color: Color(0xFF2D2D2D),
-              ),
+              style: const TextStyle(fontSize: 13, color: Color(0xFF2D2D2D)),
               decoration: _buildInputDecoration('••••••••••••••••').copyWith(
                 suffixIcon: IconButton(
                   icon: Icon(
