@@ -17,36 +17,9 @@ class _Colors {
   static const danger = Color(0xFFC97A7A);
 }
 
-// ==================== ROLES Y PERMISOS ====================
-// Consulta el rol del usuario autenticado actual en Firestore. Se busca
-// primero por UID (usuarios creados desde esta versión de la app) y, si no
-// existe, por email (usuarios de prueba creados antes de vincular Auth).
-class RolService {
-  static Future<String?> obtenerRolActual() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return null;
-
-    final porUid = await FirebaseFirestore.instance
-        .collection('usuarios')
-        .doc(user.uid)
-        .get();
-    if (porUid.exists) {
-      return porUid.data()?['rol'] as String?;
-    }
-
-    if (user.email == null) return null;
-    final porEmail = await FirebaseFirestore.instance
-        .collection('usuarios')
-        .where('email', isEqualTo: user.email)
-        .limit(1)
-        .get();
-    if (porEmail.docs.isNotEmpty) {
-      return porEmail.docs.first.data()['rol'] as String?;
-    }
-    return null;
-  }
-}
-
+// Esta pantalla solo es alcanzable por un Administrador: InventarioPage
+// (ver esAdmin en inventario.dart/main.dart) oculta la navegación a
+// "Usuarios" para cualquier otro rol, así que aquí no se vuelve a validar.
 class UsuariosPage extends StatefulWidget {
   const UsuariosPage({super.key});
 
@@ -66,7 +39,6 @@ class _UsuariosPageState extends State<UsuariosPage> {
   bool _isSaving = false;
   bool _activo = true;
   String _rolSeleccionado = 'Administrador';
-  String? _rolActual;
 
   final List<String> _roles = [
     'Administrador',
@@ -76,14 +48,6 @@ class _UsuariosPageState extends State<UsuariosPage> {
   ];
 
   @override
-  void initState() {
-    super.initState();
-    RolService.obtenerRolActual().then((rol) {
-      if (mounted) setState(() => _rolActual = rol);
-    });
-  }
-
-  @override
   void dispose() {
     _searchController.dispose();
     _nombreController.dispose();
@@ -91,8 +55,6 @@ class _UsuariosPageState extends State<UsuariosPage> {
     _passwordController.dispose();
     super.dispose();
   }
-
-  bool get _esAdministrador => _rolActual == 'Administrador';
 
   List<QueryDocumentSnapshot> _filtrarUsuarios(
     List<QueryDocumentSnapshot> docs,
@@ -312,40 +274,37 @@ class _UsuariosPageState extends State<UsuariosPage> {
                 ),
               ),
             ),
-            if (_esAdministrador) ...[
-              const SizedBox(width: 12),
-              ElevatedButton.icon(
-                onPressed: () =>
-                    setState(() => _showAddPanel = !_showAddPanel),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _showAddPanel
-                      ? _Colors.textDark
-                      : _Colors.brand,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+            const SizedBox(width: 12),
+            ElevatedButton.icon(
+              onPressed: () => setState(() => _showAddPanel = !_showAddPanel),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _showAddPanel
+                    ? _Colors.textDark
+                    : _Colors.brand,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
                 ),
-                icon: Icon(
-                  _showAddPanel
-                      ? Icons.close_rounded
-                      : Icons.person_add_alt_rounded,
-                  size: 18,
-                ),
-                label: Text(
-                  _showAddPanel ? 'Cerrar formulario' : 'Agregar Usuario',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
-            ],
+              icon: Icon(
+                _showAddPanel
+                    ? Icons.close_rounded
+                    : Icons.person_add_alt_rounded,
+                size: 18,
+              ),
+              label: Text(
+                _showAddPanel ? 'Cerrar formulario' : 'Agregar Usuario',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 20),
@@ -446,17 +405,15 @@ class _UsuariosPageState extends State<UsuariosPage> {
                               ),
                             ),
                           ),
-                          if (_esAdministrador) ...[
-                            const SizedBox(width: 8),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.delete_outline_rounded,
-                                color: _Colors.danger,
-                              ),
-                              tooltip: 'Eliminar usuario',
-                              onPressed: () => _eliminarUsuario(doc.id),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.delete_outline_rounded,
+                              color: _Colors.danger,
                             ),
-                          ],
+                            tooltip: 'Eliminar usuario',
+                            onPressed: () => _eliminarUsuario(doc.id),
+                          ),
                         ],
                       ),
                     );
@@ -695,7 +652,7 @@ class _UsuariosPageState extends State<UsuariosPage> {
                   child: AnimatedSize(
                     duration: const Duration(milliseconds: 280),
                     curve: Curves.easeInOut,
-                    child: _showAddPanel && _esAdministrador
+                    child: _showAddPanel
                         ? SizedBox(width: 380, child: _buildAddUserForm())
                         : const SizedBox(width: 0),
                   ),
