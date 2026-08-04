@@ -7,8 +7,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'firebase_options.dart';
 import 'inventario.dart';
-import 'usuarios.dart'
-    hide InventarioPage; // Evita el conflicto de clases duplicadas
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
