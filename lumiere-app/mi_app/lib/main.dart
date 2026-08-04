@@ -149,7 +149,7 @@ class _LoginPageState extends State<LoginPage> {
           },
         ),
       ),
-    );
+    ); 
   }
 
   // === ESTRUCTURA PARA ESCRITORIO ===
