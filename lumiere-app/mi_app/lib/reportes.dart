@@ -256,37 +256,72 @@ class _ReportesPageState extends State<ReportesPage> {
     );
   }
 
-  // Gráfica de Ventas
+  // Gráfica de Ventas: la cantidad de puntos y su significado cambian según
+  // el filtro temporal seleccionado (día por día en la semana, día por día
+  // en el mes, o mes por mes en el año), para que coincida con lo que ya
+  // filtró _filtrarVentasPorPeriodo().
   Widget _buildGraficaVentasCard(List<QueryDocumentSnapshot> ventas) {
     final hoy = DateTime.now();
-    final dias = List.generate(
-      7,
-      (i) => DateTime(
-        hoy.year,
-        hoy.month,
-        hoy.day,
-      ).subtract(Duration(days: 6 - i)),
-    );
-    final totalesPorDia = List<double>.filled(7, 0);
 
+    late final int totalPuntos;
+    late final List<String> etiquetas;
+    late final int Function(DateTime fecha) indiceDe;
+
+    switch (_filtroTemporal) {
+      case 'Este Año':
+        const nombresMeses = [
+          'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+          'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
+        ];
+        totalPuntos = 12;
+        etiquetas = nombresMeses;
+        indiceDe = (fecha) =>
+            fecha.year == hoy.year ? fecha.month - 1 : -1;
+      case 'Este Mes':
+        final diasEnMes = DateTime(hoy.year, hoy.month + 1, 0).day;
+        totalPuntos = diasEnMes;
+        etiquetas = List.generate(diasEnMes, (i) => '${i + 1}');
+        indiceDe = (fecha) =>
+            (fecha.year == hoy.year && fecha.month == hoy.month)
+                ? fecha.day - 1
+                : -1;
+      case 'Esta Semana':
+      default:
+        final inicioSemana = DateTime(
+          hoy.year,
+          hoy.month,
+          hoy.day,
+        ).subtract(Duration(days: hoy.weekday - 1));
+        totalPuntos = 7;
+        etiquetas = const ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+        indiceDe = (fecha) {
+          final fechaSolo = DateTime(fecha.year, fecha.month, fecha.day);
+          final diff = fechaSolo.difference(inicioSemana).inDays;
+          return (diff >= 0 && diff < 7) ? diff : -1;
+        };
+    }
+
+    final totalesPorPunto = List<double>.filled(totalPuntos, 0);
     for (final doc in ventas) {
       final data = doc.data() as Map<String, dynamic>;
       final ts = data['fecha'];
       if (ts is! Timestamp) continue;
-      final fecha = ts.toDate();
-      final fechaSolo = DateTime(fecha.year, fecha.month, fecha.day);
-      final idx = dias.indexWhere((d) => d == fechaSolo);
-      if (idx != -1) {
-        totalesPorDia[idx] += (data['total'] ?? 0).toDouble();
+      final idx = indiceDe(ts.toDate());
+      if (idx >= 0 && idx < totalPuntos) {
+        totalesPorPunto[idx] += (data['total'] ?? 0).toDouble();
       }
     }
 
-    final maxTotal = totalesPorDia.fold<double>(
+    final maxTotal = totalesPorPunto.fold<double>(
       0,
       (max, v) => v > max ? v : max,
     );
     final maxY = maxTotal <= 0 ? 100.0 : maxTotal * 1.2;
-    const nombresDias = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    // Con muchos puntos (ej. 28-31 días en un mes) no caben todas las
+    // etiquetas: se muestran solo algunas, espaciadas uniformemente.
+    final intervaloEtiquetas = totalPuntos <= 12
+        ? 1
+        : (totalPuntos / 6).ceil();
 
     return Container(
       height: 420,
@@ -343,7 +378,7 @@ class _ReportesPageState extends State<ReportesPage> {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 30,
-                      interval: 1,
+                      interval: intervaloEtiquetas.toDouble(),
                       getTitlesWidget: (value, meta) {
                         const style = TextStyle(
                           color: _Colors.textGray,
@@ -351,13 +386,10 @@ class _ReportesPageState extends State<ReportesPage> {
                           fontSize: 11,
                         );
                         final idx = value.toInt();
-                        if (idx < 0 || idx >= dias.length) {
+                        if (idx < 0 || idx >= etiquetas.length) {
                           return const Text('');
                         }
-                        return Text(
-                          nombresDias[dias[idx].weekday - 1],
-                          style: style,
-                        );
+                        return Text(etiquetas[idx], style: style);
                       },
                     ),
                   ),
@@ -381,14 +413,14 @@ class _ReportesPageState extends State<ReportesPage> {
                 ),
                 borderData: FlBorderData(show: false),
                 minX: 0,
-                maxX: 6,
+                maxX: (totalPuntos - 1).toDouble(),
                 minY: 0,
                 maxY: maxY,
                 lineBarsData: [
                   LineChartBarData(
                     spots: List.generate(
-                      7,
-                      (i) => FlSpot(i.toDouble(), totalesPorDia[i]),
+                      totalPuntos,
+                      (i) => FlSpot(i.toDouble(), totalesPorPunto[i]),
                     ),
                     isCurved: true,
                     color: _Colors.brand,

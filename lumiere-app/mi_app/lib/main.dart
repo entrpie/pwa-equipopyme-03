@@ -98,6 +98,8 @@ class _LoginPageState extends State<LoginPage> {
         if (vendedorCheck.exists) rolEncontrado = 'vendedor';
       }
 
+      if (!mounted) return;
+
       // 3. Verificación flexible para otorgar rol de Administrador
       bool esAdmin = rolEncontrado.contains('admin') || 
                       rolEncontrado.contains('supervisor') || 
