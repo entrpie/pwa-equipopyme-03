@@ -93,7 +93,7 @@ class _InventarioPageState extends State<InventarioPage> {
   @override
   void initState() {
     super.initState();
-    // Si es Admin inicia en Usuarios; si es Vendedor entra forzosamente al Catálogo
+    // Administrador/Supervisor inician en Usuarios; Operador entra forzosamente al Catálogo
     _section = widget.esAdmin ? _NavSection.usuarios : _NavSection.catalogo;
   }
 
@@ -342,7 +342,7 @@ class _InventarioPageState extends State<InventarioPage> {
                           ),
                         ),
                         Text(
-                          widget.esAdmin ? 'Panel de Administrador' : 'Panel de Vendedor',
+                          widget.esAdmin ? 'Panel de Administrador' : 'Panel de Operador',
                           style: const TextStyle(
                             color: _Colors.sidebarTextMuted,
                             fontSize: 11,
@@ -383,7 +383,7 @@ class _InventarioPageState extends State<InventarioPage> {
             ),
 
             // Ventas, como Catálogo, es visible para cualquier rol: un
-            // Vendedor también necesita poder registrar ventas.
+            // Operador también necesita poder registrar ventas.
             _NavTile(
               icon: Icons.point_of_sale_rounded,
               label: 'Ventas',

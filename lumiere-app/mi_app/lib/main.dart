@@ -76,7 +76,11 @@ class _LoginPageState extends State<LoginPage> {
       final uid = userCredential.user?.uid;
       if (uid == null) throw Exception('UID no válido');
 
-      // 2. Consulta a Firestore en la colección 'usuarios'
+      // 2. El rol vive únicamente en usuarios/{uid}.rol (o .role). Ese
+      // documento lo crea la app al dar de alta un usuario (ver
+      // usuarios.dart), así que es la única fuente de verdad — ya no se
+      // consultan colecciones sueltas de respaldo ni se infiere nada del
+      // correo.
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
           .collection('usuarios')
           .doc(uid)
@@ -84,26 +88,15 @@ class _LoginPageState extends State<LoginPage> {
 
       if (!mounted) return;
 
-      String rolEncontrado = '';
+      final data = userDoc.data() as Map<String, dynamic>?;
+      final rolEncontrado = (data?['rol'] ?? data?['role'] ?? '')
+          .toString()
+          .toLowerCase();
 
-      if (userDoc.exists) {
-        final data = userDoc.data() as Map<String, dynamic>?;
-        rolEncontrado = (data?['rol'] ?? data?['role'] ?? '').toString().toLowerCase();
-      } else {
-        // Consultas de respaldo en colecciones 'admin' o 'vendedor'
-        DocumentSnapshot adminCheck = await FirebaseFirestore.instance.collection('admin').doc(uid).get();
-        if (adminCheck.exists) rolEncontrado = 'admin';
-
-        DocumentSnapshot vendedorCheck = await FirebaseFirestore.instance.collection('vendedor').doc(uid).get();
-        if (vendedorCheck.exists) rolEncontrado = 'vendedor';
-      }
-
-      if (!mounted) return;
-
-      // 3. Verificación flexible para otorgar rol de Administrador
-      bool esAdmin = rolEncontrado.contains('admin') || 
-                      rolEncontrado.contains('supervisor') || 
-                      emailIngresado.contains('admin');
+      // 3. Administrador y Supervisor tienen acceso completo; cualquier
+      // otro rol (Operador, o sin rol asignado) solo ve Catálogo y Ventas.
+      bool esAdmin =
+          rolEncontrado.contains('admin') || rolEncontrado.contains('supervisor');
 
       if (esAdmin) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -121,7 +114,7 @@ class _LoginPageState extends State<LoginPage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Acceso concedido como Vendedor'),
+            content: Text('Acceso concedido como Operador'),
             backgroundColor: Color(0xFF556B2F),
           ),
         );
