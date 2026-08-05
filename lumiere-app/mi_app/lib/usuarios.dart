@@ -40,12 +40,7 @@ class _UsuariosPageState extends State<UsuariosPage> {
   bool _activo = true;
   String _rolSeleccionado = 'Administrador';
 
-  final List<String> _roles = [
-    'Administrador',
-    'Supervisor',
-    'Vendedor',
-    'Operador',
-  ];
+  final List<String> _roles = ['Administrador', 'Supervisor', 'Operador'];
 
   @override
   void dispose() {
