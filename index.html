@@ -16,6 +16,13 @@
   -->
   <base href="/pwa-equipopyme-03/">
 
+  <!--
+    Declaring our own viewport tag (with pinch-zoom allowed) prevents the
+    Flutter web engine from injecting its default one, which sets
+    user-scalable=no and fails Lighthouse's accessibility checks.
+  -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Lumière & Co. - Gestión de inventario, usuarios y ventas para PyME.">
