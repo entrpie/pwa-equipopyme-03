@@ -455,7 +455,10 @@ class VelasLogIn extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                  // Sigma reducido de 10 a 5: mismo look "vidrio esmerilado",
+                  // pero la mitad del costo de raster (BackdropFilter es una
+                  // de las operaciones más caras del pipeline de pintado).
+                  filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
                   child: Container(
                     width: double.infinity,
                     color: Colors.white.withValues(alpha: 0.12),

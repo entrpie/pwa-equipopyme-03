@@ -1681,6 +1681,12 @@ class _ProductCard extends StatelessWidget {
         _Colors.imageGradients[colorIndex % _Colors.imageGradients.length];
     final esBajoStock = stock < 5;
     final localImagePath = _localImagePathForProduct(nombre);
+    // Las fotos de producto se muestran en una card chica del grid, pero
+    // vienen a resolución completa. Sin esto, cada card decodifica la
+    // imagen entera en memoria aunque se pinte a ~200-500px. Limitar el
+    // ancho de decodificación no cambia cómo se ve (mismo BoxFit.cover),
+    // solo evita gastar CPU/memoria de más por cada producto del catálogo.
+    final cacheWidth = (400 * MediaQuery.of(context).devicePixelRatio).round();
 
     return Container(
       decoration: BoxDecoration(
@@ -1708,10 +1714,12 @@ class _ProductCard extends StatelessWidget {
                       child: Image.network(
                         imageUrl!,
                         fit: BoxFit.cover,
+                        cacheWidth: cacheWidth,
                         errorBuilder: (_, _, _) => Positioned.fill(
                           child: Image.asset(
                             localImagePath,
                             fit: BoxFit.cover,
+                            cacheWidth: cacheWidth,
                             errorBuilder: (_, _, _) => Center(
                               child: Icon(
                                 _iconoCategoria(categoria),
@@ -1728,6 +1736,7 @@ class _ProductCard extends StatelessWidget {
                       child: Image.asset(
                         localImagePath,
                         fit: BoxFit.cover,
+                        cacheWidth: cacheWidth,
                         errorBuilder: (_, _, _) => Center(
                           child: Icon(
                             _iconoCategoria(categoria),
