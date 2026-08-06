@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'firebase_options.dart';
 import 'inventario.dart';
 
@@ -24,7 +23,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        fontFamily: GoogleFonts.montserrat().fontFamily,
+        fontFamily: 'Montserrat',
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF8C6239),
           primary: const Color(0xFF8C6239),

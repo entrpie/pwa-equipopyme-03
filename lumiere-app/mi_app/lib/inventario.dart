@@ -1648,15 +1648,26 @@ class _ProductCard extends StatelessWidget {
     final nombreNormalizado = nombre.toLowerCase().trim();
 
     if (nombreNormalizado.contains('cherry')) {
-      return 'assets/img/vela_cherry.jpg';
+      return 'assets/img/vela_cherry.webp';
     } else if (nombreNormalizado.contains('cocacola')) {
       return 'assets/img/vela_cocacola.jpg';
     } else if (nombreNormalizado.contains('eucalyptus') ||
         nombreNormalizado.contains('spearmint')) {
-      return 'assets/img/vela_eucalyptus.jpg';
+      return 'assets/img/vela_eucalyptus.webp';
     } else if (nombreNormalizado.contains('limón') ||
         nombreNormalizado.contains('limon')) {
-      return 'assets/img/vela_limon.jpg';
+      return 'assets/img/vela_limon.webp';
+    } else if (nombreNormalizado.contains('lavanda')) {
+      return 'assets/img/vela_lavanda.webp';
+    } else if (nombreNormalizado.contains('sándalo') ||
+        nombreNormalizado.contains('sandalo')) {
+      return 'assets/img/vela_sandalo.webp';
+    } else if (nombreNormalizado.contains('canela')) {
+      return 'assets/img/waxmelt_canela_naranja.webp';
+    } else if (nombreNormalizado.contains('portavela')) {
+      return 'assets/img/portavela_ceramica.webp';
+    } else if (nombreNormalizado.contains('rosa mosqueta')) {
+      return 'assets/img/vela_rosa_mosqueta.webp';
     } else if (nombreNormalizado.contains('vainilla')) {
       return 'assets/img/wax_vainilla.jpg';
     }
