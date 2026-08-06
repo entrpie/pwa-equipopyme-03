@@ -465,13 +465,27 @@ class _UsuariosPageState extends State<UsuariosPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Nuevo Usuario',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: _Colors.textDark,
-                ),
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Nuevo Usuario',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: _Colors.textDark,
+                      ),
+                    ),
+                  ),
+                  // En móvil el formulario ocupa toda la pantalla (no cabe
+                  // junto a la lista), así que aquí es la única forma de
+                  // cerrarlo sin guardar.
+                  IconButton(
+                    icon: const Icon(Icons.close, color: _Colors.textGray),
+                    tooltip: 'Cerrar',
+                    onPressed: () => setState(() => _showAddPanel = false),
+                  ),
+                ],
               ),
               const SizedBox(height: 6),
               const Text(
@@ -673,22 +687,35 @@ class _UsuariosPageState extends State<UsuariosPage> {
             final docs = snapshot.data?.docs ?? <QueryDocumentSnapshot>[];
             final filtrados = _filtrarUsuarios(docs);
 
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(child: _buildListaUsuarios(docs, filtrados)),
-                if (_showAddPanel)
-                  const VerticalDivider(width: 1, color: _Colors.border),
-                ClipRect(
-                  child: AnimatedSize(
-                    duration: const Duration(milliseconds: 280),
-                    curve: Curves.easeInOut,
-                    child: _showAddPanel
-                        ? SizedBox(width: 380, child: _buildAddUserForm())
-                        : const SizedBox(width: 0),
-                  ),
-                ),
-              ],
+            // El panel lateral fijo de 380px solo cabe junto a la lista en
+            // pantallas anchas; por debajo del breakpoint se muestra uno u
+            // otro a pantalla completa (si no, el Row desbordaba en móvil).
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final isNarrow = constraints.maxWidth < 700;
+                if (isNarrow) {
+                  return _showAddPanel
+                      ? _buildAddUserForm()
+                      : _buildListaUsuarios(docs, filtrados);
+                }
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: _buildListaUsuarios(docs, filtrados)),
+                    if (_showAddPanel)
+                      const VerticalDivider(width: 1, color: _Colors.border),
+                    ClipRect(
+                      child: AnimatedSize(
+                        duration: const Duration(milliseconds: 280),
+                        curve: Curves.easeInOut,
+                        child: _showAddPanel
+                            ? SizedBox(width: 380, child: _buildAddUserForm())
+                            : const SizedBox(width: 0),
+                      ),
+                    ),
+                  ],
+                );
+              },
             );
           },
         ),
