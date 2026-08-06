@@ -64,13 +64,13 @@ flutter:
   uses-material-design: true
   assets:
     - assets/img/
+  # Solo se declaran los pesos que la app realmente usa (ver FontWeight.wXXX
+  # en lib/*.dart: 300, 400 -normal-, 500, 600, 700). Menos entradas en el
+  # FontManifest = menos registros que el engine procesa al iniciar; el
+  # archivo físico es el mismo variable-font en los cinco casos.
   fonts:
     - family: Montserrat
       fonts:
-        - asset: assets/fonts/Montserrat-VariableFont_wght.ttf
-          weight: 100
-        - asset: assets/fonts/Montserrat-VariableFont_wght.ttf
-          weight: 200
         - asset: assets/fonts/Montserrat-VariableFont_wght.ttf
           weight: 300
         - asset: assets/fonts/Montserrat-VariableFont_wght.ttf
@@ -81,10 +81,6 @@ flutter:
           weight: 600
         - asset: assets/fonts/Montserrat-VariableFont_wght.ttf
           weight: 700
-        - asset: assets/fonts/Montserrat-VariableFont_wght.ttf
-          weight: 800
-        - asset: assets/fonts/Montserrat-VariableFont_wght.ttf
-          weight: 900
 
   # To add assets to your application, add an assets section, like this:
   # assets:

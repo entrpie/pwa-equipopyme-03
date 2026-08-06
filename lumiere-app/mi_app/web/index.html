@@ -27,6 +27,31 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Lumière & Co. - Gestión de inventario, usuarios y ventas para PyME.">
 
+  <!--
+    Firebase Auth abre un iframe propio (en *.firebaseapp.com) para
+    sincronizar sesión entre pestañas y llama a identitytoolkit/apis.google.com
+    desde el arranque (Firebase.initializeApp corre en main()). Precalentar
+    esas conexiones adelanta el handshake TCP/TLS mientras aún se descarga
+    el motor de Flutter, en vez de pagarlo después en cascada.
+  -->
+  <link rel="preconnect" href="https://lumiere-velas.firebaseapp.com">
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com">
+  <link rel="preconnect" href="https://apis.google.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- CanvasKit (motor de render) se sirve desde el CDN de Google, que lo
+       entrega pre-comprimido con brotli; auto-hospedarlo en GitHub Pages
+       resultó en un archivo bastante más pesado en la práctica, así que
+       solo se precalienta la conexión en vez de cambiar el origen. -->
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+
+  <!--
+    Imagen de fondo del login (LCP en la carga inicial): se pide vía
+    AssetImage desde Dart, así que sin este hint el navegador no la
+    descubre hasta que el motor de Flutter ya corrió. Precargarla la pone
+    a bajar en paralelo con main.dart.js/canvaskit.
+  -->
+  <link rel="preload" as="image" fetchpriority="high" href="assets/assets/img/vela_login.jpg">
+
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">

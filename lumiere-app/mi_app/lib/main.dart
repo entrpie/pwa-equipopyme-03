@@ -5,7 +5,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
-import 'inventario.dart';
+// Carga diferida: el catálogo (y todo lo que arrastra: usuarios, ventas,
+// reportes, Firestore Storage) no se necesita para pintar el login, así que
+// no debe ir en el bundle inicial. Se descarga solo tras un login exitoso.
+import 'inventario.dart' deferred as inventario;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -97,6 +100,11 @@ class _LoginPageState extends State<LoginPage> {
       bool esAdmin =
           rolEncontrado.contains('admin') || rolEncontrado.contains('supervisor');
 
+      // El spinner del botón ya cubre esta espera de red; aprovechamos para
+      // descargar el chunk diferido del catálogo antes de navegar.
+      await inventario.loadLibrary();
+      if (!mounted) return;
+
       if (esAdmin) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -107,7 +115,7 @@ class _LoginPageState extends State<LoginPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const InventarioPage(esAdmin: true),
+            builder: (context) => inventario.InventarioPage(esAdmin: true),
           ),
         );
       } else {
@@ -120,7 +128,7 @@ class _LoginPageState extends State<LoginPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const InventarioPage(esAdmin: false),
+            builder: (context) => inventario.InventarioPage(esAdmin: false),
           ),
         );
       }
