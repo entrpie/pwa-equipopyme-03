@@ -1650,7 +1650,7 @@ class _ProductCard extends StatelessWidget {
     if (nombreNormalizado.contains('cherry')) {
       return 'assets/img/vela_cherry.webp';
     } else if (nombreNormalizado.contains('cocacola')) {
-      return 'assets/img/vela_cocacola.jpg';
+      return 'assets/img/vela_cocacola.webp';
     } else if (nombreNormalizado.contains('eucalyptus') ||
         nombreNormalizado.contains('spearmint')) {
       return 'assets/img/vela_eucalyptus.webp';
@@ -1669,10 +1669,10 @@ class _ProductCard extends StatelessWidget {
     } else if (nombreNormalizado.contains('rosa mosqueta')) {
       return 'assets/img/vela_rosa_mosqueta.webp';
     } else if (nombreNormalizado.contains('vainilla')) {
-      return 'assets/img/wax_vainilla.jpg';
+      return 'assets/img/wax_vainilla.webp';
     }
 
-    return 'assets/img/vela_login.jpg';
+    return 'assets/img/vela_login.webp';
   }
 
   @override
