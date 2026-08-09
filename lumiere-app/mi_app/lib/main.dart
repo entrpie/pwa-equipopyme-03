@@ -447,7 +447,7 @@ class VelasLogIn extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
-          image: AssetImage('assets/img/vela_login.jpg'),
+          image: AssetImage('assets/img/vela_login.webp'),
           fit: BoxFit.cover,
         ),
       ),

@@ -322,6 +322,13 @@ class _ReportesPageState extends State<ReportesPage> {
     final intervaloEtiquetas = totalPuntos <= 12
         ? 1
         : (totalPuntos / 6).ceil();
+    // Barras más angostas cuando hay muchos puntos (ej. 28-31 días en un
+    // mes) para que quepan sin encimarse.
+    final anchoBarra = totalPuntos <= 7
+        ? 22.0
+        : totalPuntos <= 12
+        ? 18.0
+        : 6.0;
 
     return Container(
       height: 420,
@@ -359,8 +366,9 @@ class _ReportesPageState extends State<ReportesPage> {
           ),
           const SizedBox(height: 36),
           Expanded(
-            child: LineChart(
-              LineChartData(
+            child: BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceAround,
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
@@ -412,27 +420,26 @@ class _ReportesPageState extends State<ReportesPage> {
                   ),
                 ),
                 borderData: FlBorderData(show: false),
-                minX: 0,
-                maxX: (totalPuntos - 1).toDouble(),
                 minY: 0,
                 maxY: maxY,
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: List.generate(
-                      totalPuntos,
-                      (i) => FlSpot(i.toDouble(), totalesPorPunto[i]),
-                    ),
-                    isCurved: true,
-                    color: _Colors.brand,
-                    barWidth: 4,
-                    isStrokeCapRound: true,
-                    dotData: const FlDotData(show: true),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: _Colors.brandLight.withValues(alpha: 0.15),
-                    ),
-                  ),
-                ],
+                barGroups: List.generate(totalPuntos, (i) {
+                  return BarChartGroupData(
+                    x: i,
+                    barRods: [
+                      BarChartRodData(
+                        toY: totalesPorPunto[i],
+                        color: _Colors.brand,
+                        width: anchoBarra,
+                        borderRadius: BorderRadius.circular(4),
+                        backDrawRodData: BackgroundBarChartRodData(
+                          show: true,
+                          toY: maxY,
+                          color: _Colors.brandLight.withValues(alpha: 0.1),
+                        ),
+                      ),
+                    ],
+                  );
+                }),
               ),
             ),
           ),
