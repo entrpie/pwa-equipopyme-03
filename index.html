@@ -52,6 +52,15 @@
   -->
   <link rel="preload" as="image" fetchpriority="high" href="assets/assets/img/vela_login.webp">
 
+  <!--
+    main.dart.js es el recurso más pesado de la carga inicial (~2.6MB) y,
+    sin este hint, el navegador no lo descubre hasta que flutter_bootstrap.js
+    termina de ejecutarse y lo inyecta como <script>. Precargarlo lo pone a
+    bajar en paralelo con CanvasKit (que es de otro origen, así que no compite
+    por la misma conexión) en vez de esperar esa cadena.
+  -->
+  <link rel="preload" as="script" href="main.dart.js">
+
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">

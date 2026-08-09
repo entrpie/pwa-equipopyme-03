@@ -3,7 +3,12 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+// También diferido: el SDK JS de Firestore (incluye el módulo de
+// "pipelines", ~750KB sin comprimir y 80%+ sin usar aquí) solo hacía
+// falta para la consulta de rol tras el login, no para pintar la
+// pantalla. Antes se cargaba igual porque este import no era diferido,
+// aunque inventario.dart sí lo fuera.
+import 'package:cloud_firestore/cloud_firestore.dart' deferred as firestore;
 import 'firebase_options.dart';
 // Carga diferida: el catálogo (y todo lo que arrastra: usuarios, ventas,
 // reportes, Firestore Storage) no se necesita para pintar el login, así que
@@ -83,14 +88,18 @@ class _LoginPageState extends State<LoginPage> {
       // usuarios.dart), así que es la única fuente de verdad — ya no se
       // consultan colecciones sueltas de respaldo ni se infiere nada del
       // correo.
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+      await firestore.loadLibrary();
+      if (!mounted) return;
+      // (Tipo inferido a propósito: `firestore.DocumentSnapshot` no se puede
+      // escribir como anotación porque viene de una librería diferida.)
+      final userDoc = await firestore.FirebaseFirestore.instance
           .collection('usuarios')
           .doc(uid)
           .get();
 
       if (!mounted) return;
 
-      final data = userDoc.data() as Map<String, dynamic>?;
+      final data = userDoc.data();
       final rolEncontrado = (data?['rol'] ?? data?['role'] ?? '')
           .toString()
           .toLowerCase();
